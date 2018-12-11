@@ -8,8 +8,7 @@
                     v-model="value[currentLocale]"
                     :class="errorClasses"
                     :placeholder="field.name"
-                    :init="options"
-            ></editor>
+                    :init="options" ></editor>
 
             <p v-if="hasError" class="my-2 text-danger">
                 {{ firstError }}
