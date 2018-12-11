@@ -20,23 +20,27 @@ class NovaTinyMCE extends Field
     {
         parent::__construct($name, $attribute, $resolveCallback);
 
-        $this->withMeta(
-            [
+        $locales = array_map(function ($value) {
+            return __($value);
+        }, config('translatable.locales'));
+
+        $this->withMeta([
+            'locales' => $locales,
+            'indexLocale' => app()->getLocale(),
             'options' => [
-            'path_absolute' => '/',
-            'plugins' => [
-                'lists preview hr anchor pagebreak',
-                'wordcount fullscreen',
-                'contextmenu directionality',
-                'paste textcolor colorpicker textpattern'
-            ],
-            'toolbar' => 'undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link',
-            'relative_urls' => false,
-            'use_lfm' => false,
-            'lfm_url' => 'laravel-filemanager'
+                'path_absolute' => '/',
+                'plugins' => [
+                    'lists preview hr anchor pagebreak',
+                    'wordcount fullscreen',
+                    'contextmenu directionality',
+                    'paste textcolor colorpicker textpattern'
+                ],
+                'toolbar' => 'undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link',
+                'relative_urls' => false,
+                'use_lfm' => false,
+                'lfm_url' => 'laravel-filemanager'
             ]
-            ]
-        );
+        ]);
     }
 
     /**
@@ -51,10 +55,17 @@ class NovaTinyMCE extends Field
     {
         $currentOptions = $this->meta['options'];
         
-        return $this->withMeta(
-            [
-            'options' => array_merge($currentOptions, $options)
+        return $this->withMeta([
+                'options' => array_merge($currentOptions, $options),
             ]
         );
+    }
+
+    protected function resolveAttribute($resource, $attribute)
+    {
+        if (method_exists($resource, 'getTranslations')) {
+            return $resource->getTranslations($attribute);
+        }
+        return data_get($resource, $attribute);
     }
 }

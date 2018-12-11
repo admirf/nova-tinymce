@@ -1,9 +1,11 @@
 <template>
     <default-field :field="field" :full-width-content="true">
         <template slot="field">
+            <LanguageTabs v-model="currentLocale" :locales="field.locales"/>
+            <br />
             <editor :api-key="tinymce_api_key"
                     :id="field.attribute" 
-                    v-model="value" 
+                    v-model="value[currentLocale]"
                     :class="errorClasses"
                     :placeholder="field.name"
                     :init="options"
@@ -19,13 +21,28 @@
 <script>
 import { FormField, HandlesValidationErrors } from 'laravel-nova'
 import Editor from '@tinymce/tinymce-vue'
+import LanguageTabs from './LanguageTabs'
 
 export default {
-    components: { Editor },
+    components: {
+        Editor,
+        LanguageTabs
+    },
 
     mixins: [FormField, HandlesValidationErrors],
 
     props: ['resourceName', 'resourceId', 'field'],
+
+    data () {
+        return {
+            locales: Object.keys(this.field.locales),
+            currentLocale: null
+        }
+    },
+
+    mounted () {
+        this.currentLocale = this.locales[0] || null
+    },
 
     computed: {
         tinymce_api_key() {
@@ -48,21 +65,23 @@ export default {
          * Set the initial, internal value for the field.
          */
         setInitialValue() {
-          this.value = this.field.value || ''
+            this.value = this.field.value || {}
         },
 
         /**
          * Fill the given FormData object with the field's internal value.
          */
         fill(formData) {
-          formData.append(this.field.attribute, this.value || '')
+            Object.keys(this.value).forEach(locale => {
+                formData.append(this.field.attribute + '[' + locale + ']', this.value[locale] || '')
+            })
         },
 
         /**
          * Update the field's internal value.
          */
         handleChange(value) {
-          this.value = value
+            this.value[this.currentLocale] = value
         },
 
         filemanager(field_name, url, type, win) {
